@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This class is meant to be extended by all REST resource "controllers".
@@ -30,9 +30,7 @@ public abstract class AbstractRestHandler implements ApplicationEventPublisherAw
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(DataFormatException.class)
-    public
-    @ResponseBody
-    RestErrorInfo handleDataStoreException(DataFormatException ex, WebRequest request, HttpServletResponse response) {
+    public RestErrorInfo handleDataStoreException(DataFormatException ex, WebRequest request, HttpServletResponse response) {
         log.info("Converting Data Store exception to RestResponse : " + ex.getMessage());
 
         return new RestErrorInfo(ex, "You messed up.");
