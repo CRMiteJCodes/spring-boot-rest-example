@@ -1,12 +1,12 @@
 package com.khoubyari.example.api.rest;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-
 import com.khoubyari.example.domain.Hotel;
 import com.khoubyari.example.exception.DataFormatException;
 import com.khoubyari.example.service.HotelService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,68 +16,79 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/*
- * Demonstrates how to set up RESTful API endpoints using Spring MVC
- */
-
 @RestController
 @RequestMapping("/example/v1/hotels")
-@Api(tags = {"hotels"})
+@Tag(name = "Hotels", description = "Hotel management operations")
 public class HotelController extends AbstractRestHandler {
 
     @Autowired
     private HotelService hotelService;
 
     @PostMapping(consumes = {"application/json", "application/xml"},
-                produces = {"application/json", "application/xml"})
+                 produces = {"application/json", "application/xml"})
     @ResponseStatus(HttpStatus.CREATED)
-    @ApiOperation(value = "Create a hotel resource.", notes = "Returns the URL of the new resource in the Location header.")
-    public void createHotel(@RequestBody Hotel hotel,
-                                 HttpServletRequest request, HttpServletResponse response) {
+    @Operation(
+        summary = "Create a hotel resource",
+        description = "Returns the URL of the new resource in the Location header."
+    )
+    public void createHotel(
+            @RequestBody Hotel hotel,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         Hotel createdHotel = this.hotelService.createHotel(hotel);
         response.setHeader("Location", request.getRequestURL().append("/").append(createdHotel.getId()).toString());
     }
 
     @GetMapping(produces = {"application/json", "application/xml"})
     @ResponseStatus(HttpStatus.OK)
-    @ApiOperation(value = "Get a paginated list of all hotels.", notes = "The list is paginated. You can provide a page number (default 0) and a page size (default 100)")
-    public Page<Hotel> getAllHotel(@ApiParam(value = "The page number (zero-based)", required = true)
-                                      @RequestParam(value = "page", required = true, defaultValue = DEFAULT_PAGE_NUM) Integer page,
-                                      @ApiParam(value = "Tha page size", required = true)
-                                      @RequestParam(value = "size", required = true, defaultValue = DEFAULT_PAGE_SIZE) Integer size) {
+    @Operation(
+        summary = "Get all hotels (paginated)",
+        description = "Provide a page number (default 0) and page size (default 100)."
+    )
+    public Page<Hotel> getAllHotel(
+            @Parameter(description = "The page number (zero-based)", required = true)
+            @RequestParam(value = "page", defaultValue = DEFAULT_PAGE_NUM) Integer page,
+            @Parameter(description = "The page size", required = true)
+            @RequestParam(value = "size", defaultValue = DEFAULT_PAGE_SIZE) Integer size) {
         return this.hotelService.getAllHotels(page, size);
     }
 
-    @GetMapping(value = "/{id}",
-            produces = {"application/json", "application/xml"})
+    @GetMapping(value = "/{id}", produces = {"application/json", "application/xml"})
     @ResponseStatus(HttpStatus.OK)
-    @ApiOperation(value = "Get a single hotel.", notes = "You have to provide a valid hotel ID.")
-    public Hotel getHotel(@ApiParam(value = "The ID of the hotel.", required = true)
-                             @PathVariable("id") Long id) throws Exception {
+    @Operation(summary = "Get a single hotel", description = "Provide a valid hotel ID.")
+    public Hotel getHotel(
+            @Parameter(description = "The ID of the hotel.", required = true)
+            @PathVariable("id") Long id) throws Exception {
         Hotel hotel = this.hotelService.getHotel(id);
         checkResourceFound(hotel);
-        //todo: http://goo.gl/6iNAkz
         return hotel;
     }
 
     @PutMapping(value = "/{id}", consumes = {"application/json", "application/xml"},
-            produces = {"application/json", "application/xml"})
+                produces = {"application/json", "application/xml"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Update a hotel resource.", notes = "You have to provide a valid hotel ID in the URL and in the payload. The ID attribute can not be updated.")
-    public void updateHotel(@ApiParam(value = "The ID of the existing hotel resource.", required = true)
-                                 @PathVariable("id") Long id, @RequestBody Hotel hotel) {
+    @Operation(
+        summary = "Update a hotel resource",
+        description = "Provide a valid hotel ID in the URL and payload. The ID cannot be updated."
+    )
+    public void updateHotel(
+            @Parameter(description = "The ID of the existing hotel resource.", required = true)
+            @PathVariable("id") Long id,
+            @RequestBody Hotel hotel) {
         checkResourceFound(this.hotelService.getHotel(id));
-        if (id != hotel.getId()) throw new DataFormatException("ID doesn't match!");
+        if (!id.equals(hotel.getId())) throw new DataFormatException("ID doesn't match!");
         this.hotelService.updateHotel(hotel);
     }
 
-    //todo: @ApiImplicitParams, @ApiResponses
-    @DeleteMapping(value = "/{id}",
-            produces = {"application/json", "application/xml"})
+    @DeleteMapping(value = "/{id}", produces = {"application/json", "application/xml"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Delete a hotel resource.", notes = "You have to provide a valid hotel ID in the URL. Once deleted the resource can not be recovered.")
-    public void deleteHotel(@ApiParam(value = "The ID of the existing hotel resource.", required = true)
-                                 @PathVariable("id") Long id) {
+    @Operation(
+        summary = "Delete a hotel resource",
+        description = "Provide a valid hotel ID in the URL. Once deleted, the resource cannot be recovered."
+    )
+    public void deleteHotel(
+            @Parameter(description = "The ID of the existing hotel resource.", required = true)
+            @PathVariable("id") Long id) {
         checkResourceFound(this.hotelService.getHotel(id));
         this.hotelService.deleteHotel(id);
     }
